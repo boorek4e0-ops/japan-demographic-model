@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<!--
+  GitHub Pages: add this file to your repo (site root or /docs), commit, then
+  Settings → Pages → deploy from that branch/folder. No build step; Chart.js loads from jsDelivr CDN.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Japan: Demographic Transition 1950–2100</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e8ecf1;
+      --muted: #8b9aaf;
+      --birth: #5dade2;
+      --death: #e74c3c;
+      --pop: #58d68d;
+      --border: #2d3a4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 1rem;
+    }
+    h1 {
+      font-size: clamp(1.4rem, 3vw, 1.85rem);
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 720px;
+    }
+    .note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+    }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--birth);
+      margin-top: 0.5rem;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+    }
+    .readout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .readout h2 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0 0 0.85rem;
+    }
+    .readout-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem 1.25rem;
+    }
+    .readout-item label {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+    .readout-item strong {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .readout-item .sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .chart-card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .chart-help {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin: 0 0 0.85rem;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 440px;
+      cursor: crosshair;
+    }
+    .stages {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .stage {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      font-size: 0.875rem;
+    }
+    .stage strong {
+      display: block;
+      color: var(--birth);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+    .legend-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .legend-inline span { display: flex; align-items: center; gap: 0.35rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.birth { background: var(--birth); }
+    .dot.death { background: var(--death); }
+    .dot.pop { background: var(--pop); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Japan: Demographic transition model (1950–2100)</h1>
+    <p class="subtitle">
+      Crude birth and death rates (per 1,000 population) and total population. Historical values through 2024; projections from 2025 onward.
+    </p>
+    <p class="note">
+      Columns: <strong style="color: var(--text)">year · population · crude death rate · crude birth rate</strong>.
+    </p>
+    <p class="hint">Click the chart to snap to the nearest year. <strong>Left axis:</strong> crude birth and death rates (per 1,000). <strong>Right axis:</strong> population (millions). Details appear in the panel below.</p>
+  </header>
+  <main>
+    <div class="readout" id="readout" aria-live="polite">
+      <h2>Selected year</h2>
+      <div class="readout-grid">
+        <div class="readout-item">
+          <label>Year</label>
+          <strong id="r-year">—</strong>
+        </div>
+        <div class="readout-item">
+          <label>Population</label>
+          <strong id="r-pop">—</strong>
+          <span class="sub" id="r-pop-m"> </span>
+        </div>
+        <div class="readout-item">
+          <label>Crude birth rate</label>
+          <strong id="r-cbr">—</strong>
+          <span class="sub">per 1,000 / year</span>
+        </div>
+        <div class="readout-item">
+          <label>Crude death rate</label>
+          <strong id="r-cdr">—</strong>
+          <span class="sub">per 1,000 / year</span>
+        </div>
+        <div class="readout-item">
+          <label>Natural increase</label>
+          <strong id="r-ni">—</strong>
+          <span class="sub">birth − death per 1,000</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h2>Demographic transition model</h2>
+      <p class="chart-help">
+        <strong>Left Y-axis:</strong> crude birth (blue) &amp; death (red) per 1,000.
+        <strong>Right Y-axis:</strong> population (green, millions).
+        Amber line: <strong style="color: #f1c40f">2026 (~now)</strong>. Purple: <strong style="color: #bb86f5">2050</strong>.
+        White dashed: your selected year, with horizontal guides to all three series.
+      </p>
+      <div class="chart-wrap">
+        <canvas id="dtmChart"></canvas>
+      </div>
+    </div>
+    <section class="stages">
+      <div class="stage">
+        <strong>Stage 2 → 3 (1950s–1970s)</strong>
+        Death rates fall from moderate to low; birth rates still relatively high → strong population growth and “demographic dividend” potential.
+      </div>
+      <div class="stage">
+        <strong>Stage 3 (≈1970–1990s)</strong>
+        Birth rates fall toward death rates; growth slows as fertility declines (second demographic transition).
+      </div>
+      <div class="stage">
+        <strong>Stage 4 → 5 (2000s onward)</strong>
+        Low birth, rising death (aging); natural decrease; population peaks then declines—classic late transition / post-transition pattern in projections.
+      </div>
+    </section>
+  </main>
+  <script>
+    const raw = `1950	84353060	11.078	28.343
+1951	85683470	10.065	25.38
+1952	86921760	9.068	23.413
+1953	88057140	9.046	21.552
+1954	89093016	8.337	20.253
+1955	90090280	7.923	19.651
+1956	91021560	8.189	18.692
+1957	91837660	8.432	17.503
+1958	92671300	7.62	18.238
+1959	93575980	7.598	17.836
+1960	94464840	7.73	17.551
+1961	95355464	7.547	17.328
+1962	96267890	7.641	17.443
+1963	97246710	7.148	17.722
+1964	98319340	7.108	18.128
+1965	99468750	7.331	18.751
+1966	100466904	6.927	14.354
+1967	101527860	6.928	19.096
+1968	102819280	6.966	18.426
+1969	104102070	6.953	18.273
+1970	105416840	7.076	18.568
+1971	106789360	6.712	18.876
+1972	108220400	6.616	19.172
+1973	109679470	6.719	19.469
+1974	111100024	6.646	18.679
+1975	112411640	6.501	17.401
+1976	113624870	6.447	16.403
+1977	114761520	6.266	15.533
+1978	115809520	6.265	14.904
+1979	116765510	6.159	14.142
+1980	117624200	6.422	13.541
+1981	118385730	6.364	12.752
+1982	119098140	6.253	12.471
+1983	119793750	6.469	12.323
+1984	120470740	6.443	12.11
+1985	121119020	6.515	11.747
+1986	121710300	6.485	11.169
+1987	122268890	6.467	11.075
+1988	122798300	6.807	10.801
+1989	123270650	6.743	10.215
+1990	123686320	7.004	9.909
+1991	124073990	7.062	9.954
+1992	124444696	7.279	9.83
+1993	124779576	7.452	9.688
+1994	125119260	7.418	9.974
+1995	125433970	7.797	9.628
+1996	125726220	7.556	9.741
+1997	126027980	7.695	9.606
+1998	126308390	7.873	9.592
+1999	126555064	8.257	9.418
+2000	126803864	8.079	9.604
+2001	127065736	8.143	9.345
+2002	127301740	8.239	9.213
+2003	127502350	8.523	8.961
+2004	127671290	8.631	8.843
+2005	127798376	9.114	8.629
+2006	127902170	9.131	8.784
+2007	128006424	9.34	8.787
+2008	128077630	9.635	8.789
+2009	128117040	9.649	8.63
+2010	128105430	10.12	8.555
+2011	128007256	10.608	8.386
+2012	127853690	10.67	8.322
+2013	127678920	10.787	8.267
+2014	127476730	10.87	8.068
+2015	127250936	11.048	8.027
+2016	126993860	11.252	7.808
+2017	126662460	11.567	7.247
+2018	126255870	11.835	7.016
+2019	125791680	12.087	6.663
+2020	125244760	12.07	6.61
+2021	124612530	12.64	6.571
+2022	123951700	12.655	6.576
+2023	123294510	12.778	6.603
+2024	122631430	12.894	6.653
+2025	121960410	13.028	6.655
+2026	121282490	13.141	6.717
+2027	120600610	13.281	6.769
+2028	119912230	13.408	6.803
+2029	119217096	13.543	6.843
+2030	118514790	13.682	6.877
+2031	117805680	13.811	6.914
+2032	117090080	13.941	6.943
+2033	116368190	14.073	6.983
+2034	115641070	14.196	7.02
+2035	114907060	14.329	7.028
+2036	114164950	14.438	7.027
+2037	113416744	14.548	7.043
+2038	112664560	14.638	7.059
+2039	111910720	14.719	7.083
+2040	111157200	14.767	7.091
+2041	110405210	14.807	7.095
+2042	109654640	14.83	7.075
+2043	108903960	14.845	7.024
+2044	108155540	14.833	7.012
+2045	107412296	14.808	6.975
+2046	106674350	14.775	6.945
+2047	105942536	14.728	6.902
+2048	105216616	14.678	6.851
+2049	104497280	14.622	6.814
+2050	103784360	14.586	6.774
+2051	103076690	14.556	6.741
+2052	102373736	14.557	6.73
+2053	101672960	14.573	6.694
+2054	100969710	14.618	6.634
+2055	100261150	14.701	6.605
+2056	99547970	14.809	6.618
+2057	98829220	14.94	6.613
+2058	98103896	15.08	6.635
+2059	97371464	15.23	6.631
+2060	96631460	15.392	6.662
+2061	95885920	15.567	6.72
+2062	95135944	15.729	6.767
+2063	94381510	15.868	6.785
+2064	93622760	16.018	6.82
+2065	92862520	16.116	6.853
+2066	92104050	16.227	6.915
+2067	91348810	16.295	6.948
+2068	90601496	16.324	7.034
+2069	89863720	16.337	7.048
+2070	89136820	16.301	7.102
+2071	88424330	16.234	7.12
+2072	87727656	16.137	7.15
+2073	87048360	16	7.141
+2074	86388770	15.861	7.192
+2075	85749784	15.698	7.185
+2076	85129656	15.534	7.18
+2077	84529220	15.36	7.19
+2078	83948380	15.173	7.169
+2079	83384470	15.026	7.15
+2080	82836600	14.866	7.142
+2081	82305350	14.728	7.153
+2082	81787530	14.607	7.113
+2083	81280424	14.504	7.098
+2084	80784460	14.41	7.099
+2085	80297790	14.344	7.078
+2086	79817816	14.285	7.053
+2087	79344370	14.221	7.033
+2088	78877800	14.187	7.043
+2089	78416136	14.172	7.023
+2090	77959320	14.158	7.055
+2091	77507336	14.146	7.039
+2092	77059256	14.128	7.043
+2093	76615270	14.138	7.054
+2094	76175520	14.14	7.083
+2095	75741100	14.142	7.118
+2096	75310670	14.141	7.11
+2097	74884750	14.142	7.158
+2098	74465690	14.124	7.197
+2099	74051900	14.113	7.193
+2100	73644056	14.065	7.222`;
+
+    const rows = raw.trim().split("\n").map((line) => {
+      const p = line.split(/\t/);
+      return {
+        y: +p[0],
+        pop: +p[1],
+        cdr: +p[2],
+        cbr: +p[3],
+      };
+    });
+
+    const years = rows.map((r) => r.y);
+    const cbr = rows.map((r) => r.cbr);
+    const cdr = rows.map((r) => r.cdr);
+    const popFull = rows.map((r) => r.pop);
+    const popM = rows.map((r) => r.pop / 1e6);
+
+    const appState = {
+      selectedIndex: Math.max(0, years.indexOf(2026)),
+    };
+
+    /** X pixel for data index i (category x-scale + getPixelForValue is unreliable for years). */
+    function xPixelAtDataIndex(chart, i) {
+      const meta = chart.getDatasetMeta(0);
+      const el = meta?.data?.[i];
+      if (el && typeof el.x === "number" && !Number.isNaN(el.x)) return el.x;
+      return chart.scales.x.getPixelForValue(chart.data.labels[i]);
+    }
+
+    /** Fixed timeline markers on the combined chart. */
+    const REF_MARKERS = [
+      { year: 2026, caption: "2026 · ~now", stroke: "rgba(241, 196, 15, 0.9)", fill: "#f1c40f" },
+      { year: 2050, caption: "2050", stroke: "rgba(187, 134, 245, 0.9)", fill: "#bb86f5" },
+    ];
+
+    function drawRefYearLines(chart) {
+      const { ctx, chartArea } = chart;
+      for (const m of REF_MARKERS) {
+        const yi = years.indexOf(m.year);
+        if (yi < 0) continue;
+        const x = xPixelAtDataIndex(chart, yi);
+        if (Number.isNaN(x) || x < chartArea.left || x > chartArea.right) continue;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.strokeStyle = m.stroke;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = "600 10px DM Sans, system-ui, sans-serif";
+        ctx.fillStyle = m.fill;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(m.caption, x, chartArea.top + 26);
+        ctx.restore();
+      }
+    }
+
+    function nearestIndex(chart, event) {
+      const pos = Chart.helpers.getRelativePosition(event, chart);
+      const meta = chart.getDatasetMeta(0);
+      const n = meta?.data?.length ?? 0;
+      let best = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < n; i++) {
+        const el = meta.data[i];
+        if (!el || el.skip) continue;
+        const d = Math.abs(el.x - pos.x);
+        if (d < bestDist) {
+          bestDist = d;
+          best = i;
+        }
+      }
+      return best;
+    }
+
+    function fmtPop(n) {
+      return n.toLocaleString("en-US");
+    }
+
+    function fmtRate(x) {
+      return Number.isFinite(x) ? x.toFixed(3) : "—";
+    }
+
+    function updateReadout() {
+      const i = appState.selectedIndex;
+      const row = rows[i];
+      if (!row) return;
+
+      document.getElementById("r-year").textContent = String(row.y);
+      document.getElementById("r-pop").textContent = fmtPop(row.pop);
+      document.getElementById("r-pop-m").textContent =
+        `(${popM[i].toFixed(3)} million)`;
+      document.getElementById("r-cbr").textContent = fmtRate(row.cbr);
+      document.getElementById("r-cdr").textContent = fmtRate(row.cdr);
+      const ni = row.cbr - row.cdr;
+      const niEl = document.getElementById("r-ni");
+      niEl.textContent = (ni >= 0 ? "+" : "") + ni.toFixed(3);
+      niEl.style.color = ni >= 0 ? "var(--birth)" : "var(--death)";
+    }
+
+    function setSelection(index) {
+      const i = Math.max(0, Math.min(rows.length - 1, index));
+      appState.selectedIndex = i;
+      if (dtmChart) dtmChart.draw();
+      updateReadout();
+    }
+
+    function handleChartClick(event, _elements, chart) {
+      const pos = Chart.helpers.getRelativePosition(event, chart);
+      const { chartArea } = chart;
+      if (
+        pos.x < chartArea.left ||
+        pos.x > chartArea.right ||
+        pos.y < chartArea.top ||
+        pos.y > chartArea.bottom
+      ) {
+        return;
+      }
+      setSelection(nearestIndex(chart, event));
+    }
+
+    const crosshairPlugin = {
+      id: "demographicCrosshair",
+      afterDatasetsDraw(chart) {
+        if (chart.canvas.id !== "dtmChart") return;
+
+        drawRefYearLines(chart);
+
+        const idx = appState.selectedIndex;
+        if (idx < 0 || idx >= rows.length) return;
+
+        const { ctx, chartArea, scales } = chart;
+        const yL = scales.y;
+        const yR = scales.y1;
+        const yearShown = rows[idx].y;
+        const x = xPixelAtDataIndex(chart, idx);
+        if (Number.isNaN(x) || x < chartArea.left || x > chartArea.right) return;
+
+        ctx.save();
+
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.strokeStyle = "rgba(232, 236, 241, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "rgba(232, 236, 241, 0.9)";
+        ctx.font = "600 11px DM Sans, system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(String(yearShown), x, chartArea.top + 14);
+
+        const yB = yL.getPixelForValue(cbr[idx]);
+        const yD = yL.getPixelForValue(cdr[idx]);
+
+        [
+          [yB, "#5dade2"],
+          [yD, "#e74c3c"],
+        ].forEach(([yp, colN]) => {
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, yp);
+          ctx.lineTo(x, yp);
+          ctx.strokeStyle = colN;
+          ctx.globalAlpha = 0.55;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.globalAlpha = 1;
+        });
+
+        [
+          [yB, "#5dade2"],
+          [yD, "#e74c3c"],
+        ].forEach(([yp, colN]) => {
+          ctx.beginPath();
+          ctx.arc(x, yp, 5, 0, Math.PI * 2);
+          ctx.fillStyle = colN;
+          ctx.fill();
+          ctx.strokeStyle = "#0f1419";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+
+        if (yR) {
+          const yp = yR.getPixelForValue(popM[idx]);
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, yp);
+          ctx.lineTo(x, yp);
+          ctx.strokeStyle = "rgba(88, 214, 141, 0.65)";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.arc(x, yp, 5, 0, Math.PI * 2);
+          ctx.fillStyle = "#58d68d";
+          ctx.fill();
+          ctx.strokeStyle = "#0f1419";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      },
+    };
+
+    Chart.register(crosshairPlugin);
+
+    const axisCommon = {
+      x: {
+        grid: { color: "rgba(45, 58, 77, 0.5)" },
+        ticks: {
+          color: "#8b9aaf",
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 12,
+        },
+      },
+      y: {
+        position: "left",
+        grid: { color: "rgba(45, 58, 77, 0.5)" },
+        ticks: { color: "#8b9aaf" },
+        title: {
+          display: true,
+          text: "Birth & death rates (per 1,000)",
+          color: "#8b9aaf",
+        },
+      },
+      y1: {
+        position: "right",
+        grid: { drawOnChartArea: false },
+        ticks: { color: "#7dcea0" },
+        title: {
+          display: true,
+          text: "Population (millions)",
+          color: "#58d68d",
+        },
+      },
+    };
+
+    let dtmChart;
+
+    dtmChart = new Chart(document.getElementById("dtmChart"), {
+      type: "line",
+      data: {
+        labels: years,
+        datasets: [
+          {
+            label: "Population (millions)",
+            data: popM,
+            yAxisID: "y1",
+            borderColor: "#58d68d",
+            backgroundColor: "rgba(88, 214, 141, 0.12)",
+            fill: true,
+            tension: 0.15,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            borderWidth: 2,
+            order: 0,
+          },
+          {
+            label: "Crude birth rate",
+            data: cbr,
+            yAxisID: "y",
+            borderColor: "#5dade2",
+            backgroundColor: "transparent",
+            fill: false,
+            tension: 0.15,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            borderWidth: 2,
+            order: 1,
+          },
+          {
+            label: "Crude death rate",
+            data: cdr,
+            yAxisID: "y",
+            borderColor: "#e74c3c",
+            backgroundColor: "transparent",
+            fill: false,
+            tension: 0.15,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            borderWidth: 2,
+            order: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        onClick: handleChartClick,
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: {
+              color: "#8b9aaf",
+              usePointStyle: true,
+              padding: 14,
+            },
+          },
+          tooltip: {
+            backgroundColor: "#1a2332",
+            borderColor: "#2d3a4d",
+            borderWidth: 1,
+            titleColor: "#e8ecf1",
+            bodyColor: "#8b9aaf",
+            callbacks: {
+              title(items) {
+                if (!items.length) return "";
+                return String(rows[items[0].dataIndex].y);
+              },
+              label(ctx) {
+                const i = ctx.dataIndex;
+                if (ctx.dataset.yAxisID === "y1") {
+                  return `Population: ${fmtPop(rows[i].pop)} (${popM[i].toFixed(3)} M)`;
+                }
+                return `${ctx.dataset.label}: ${fmtRate(ctx.parsed.y)}`;
+              },
+              afterBody(items) {
+                if (!items.length) return "";
+                const i = items[0].dataIndex;
+                const ni = (cbr[i] - cdr[i]).toFixed(3);
+                return [`Natural increase: ${ni} / 1,000`, "Click to pin"];
+              }
+            },
+          },
+        },
+        scales: axisCommon,
+      },
+    });
+
+    updateReadout();
+    dtmChart.draw();
+  </script>
+</body>
+</html>
